@@ -19,6 +19,19 @@ if !exists('g:atattach_enabled')
   let g:atattach_enabled = 1
 endif
 
+" 保存依赖检查结果
+let g:atattach_dependencies_ok = 0
+
+function! s:AtAttachCheckDependencies() abort
+  " 只检查 fzf.vim 是否已加载并暴露核心函数
+  if exists('*fzf#run') && exists('*fzf#wrap')
+    return 1
+  endif
+  return 0
+endfunction
+
+let g:atattach_dependencies_ok = s:AtAttachCheckDependencies()
+
 " ===== User commands: 开/关 =====
 command! AtAttachStart call atattach#Start()
 command! AtAttachStop  call atattach#Stop()

@@ -7,8 +7,19 @@ let s:at_timer = -1
 let s:at_pending = 0
 let s:at_pos = {}   " {bufnr, lnum, col} col is 1-based
 
+
+function! atattach#HasDependencies() abort
+  return exists('*fzf#run') && exists('*fzf#wrap')
+endfunction
+
 " ========== public API ==========
 function! atattach#Start() abort
+  if !atattach#HasDependencies()
+    let g:atattach_enabled = 0
+    echohl WarningMsg | echom "[atattach] disabled: fzf.vim/fzf is not available" | echohl None
+    return
+  endif
+
   if s:started
     return
   endif
