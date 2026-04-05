@@ -174,12 +174,7 @@ function! s:ReplaceAtWithLink(abs_path) abort
   "" move cursor to end of inserted link and return to Insert mode (default)
   let l:cur_stop = l:c + strlen(l:link)
   call cursor(l:lnum, l:cur_stop)
-
-  if l:cur_stop <= len(l:new)
-    call feedkeys("\<Ignore>a", 'n')
-  else
-    call feedkeys("\<Ignore>A", 'n')
-  endif
+  call feedkeys("\<Ignore>i", 'n')
 
   let s:at_pos = {}
 endfunction
