@@ -163,8 +163,6 @@ function! s:ReplaceAtWithLink(abs_path) abort
   " validate '@' position (allow off-by-one)
   if l:c >= 1 && l:c <= len(l:line) && l:line[l:c - 1] ==# '@'
     " ok
-  elseif l:c + 1 <= len(l:line) && l:line[l:c] ==# '@'
-    let l:c += 1
   else
     return
   endif
@@ -173,9 +171,15 @@ function! s:ReplaceAtWithLink(abs_path) abort
   let l:new = strpart(l:line, 0, l:c - 1) . l:link . strpart(l:line, l:c)
   call setline(l:lnum, l:new)
 
-  " move cursor to end of inserted link and return to Insert mode (default)
-  call cursor(l:lnum, (l:c - 1) + strlen(l:link) + 1)
-  startinsert
+  "" move cursor to end of inserted link and return to Insert mode (default)
+  let l:cur_stop = l:c + strlen(l:link)
+  call cursor(l:lnum, l:cur_stop)
+
+  if l:cur_stop <= len(l:new)
+    call feedkeys("\<Ignore>a", 'n')
+  else
+    call feedkeys("\<Ignore>A", 'n')
+  endif
 
   let s:at_pos = {}
 endfunction
