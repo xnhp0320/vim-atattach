@@ -133,13 +133,16 @@ function! s:UrlEncodePath(p) abort
   return l:s
 endfunction
 
-function! s:MakeMarkdownLink(abs_path) abort
-  let l:name = fnamemodify(a:abs_path, ':t')
-  let l:url = 'file:///' . s:UrlEncodePath(fnamemodify(a:abs_path, ':p'))
+function! s:MakeMarkdownLink(rel_path) abort
+  let l:name = fnamemodify(a:rel_path, ':t')
+  let l:url = s:UrlEncodePath(a:rel_path)
   return '[' . l:name . '](' . l:url . ')'
 endfunction
 
-function! s:ReplaceAtWithLink(abs_path) abort
+function! s:ReplaceAtWithLink(rel_path) abort
+  if empty(a:rel_path)
+    return
+  endif
   if empty(get(s:at_pos, 'bufnr', 0))
     return
   endif
@@ -167,7 +170,7 @@ function! s:ReplaceAtWithLink(abs_path) abort
     return
   endif
 
-  let l:link = s:MakeMarkdownLink(a:abs_path)
+  let l:link = s:MakeMarkdownLink(a:rel_path)
   let l:new = strpart(l:line, 0, l:c - 1) . l:link . strpart(l:line, l:c)
   call setline(l:lnum, l:new)
 
@@ -179,22 +182,24 @@ function! s:ReplaceAtWithLink(abs_path) abort
   let s:at_pos = {}
 endfunction
 
-function! s:ToAbsPath(root, p) abort
-  if a:p =~# '^\s*$'
+function! s:ToRelPath(root, p) abort
+  let l:path = substitute(a:p, '^\s*\|\s*$', '', 'g')
+  if empty(l:path)
     return ''
   endif
 
-  " Unix abs
-  if a:p[0] ==# '/'
-    return fnamemodify(a:p, ':p')
+  " Already relative — use as-is
+  if l:path[0] !=# '/' && l:path !~# '^\a\:[\\/]'
+    return l:path
   endif
 
-  " Windows abs
-  if a:p =~# '^\a\:\'
-    return fnamemodify(a:p, ':p')
+  " Make absolute path relative to root
+  let l:abs = fnamemodify(l:path, ':p')
+  let l:root = fnamemodify(a:root . '/', ':p')
+  if l:abs[:len(l:root)-1] ==# l:root
+    return l:abs[len(l:root):]
   endif
-
-  return fnamemodify(a:root . '/' . a:p, ':p')
+  return l:path
 endfunction
 
 function! s:OpenFzfAtRoot() abort
@@ -214,7 +219,7 @@ function! s:OpenFzfAtRoot() abort
         \ ]
 
   let l:spec = {
-        \ 'sink': {p -> s:ReplaceAtWithLink(s:ToAbsPath(l:root, p))},
+        \ 'sink': {p -> s:ReplaceAtWithLink(s:ToRelPath(l:root, p))},
         \ 'options': join(l:opts, ' ')
         \ }
 
