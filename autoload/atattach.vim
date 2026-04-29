@@ -101,27 +101,12 @@ function! s:OnTimeout(timer_id) abort
   call s:OpenFzfAtRoot()
 endfunction
 
-function! s:FindAgentsRoot(start_dir) abort
-  let l:dir = a:start_dir
-  while 1
-    if filereadable(l:dir . '/AGENTS.md')
-      return l:dir
-    endif
-    let l:parent = fnamemodify(l:dir, ':h')
-    if l:parent ==# l:dir
-      return ''
-    endif
-    let l:dir = l:parent
-  endwhile
-endfunction
-
 function! s:GetFzfRoot() abort
   let l:start = expand('%:p:h')
   if empty(l:start)
     let l:start = getcwd()
   endif
-  let l:root = s:FindAgentsRoot(l:start)
-  return empty(l:root) ? getcwd() : l:root
+  return l:start
 endfunction
 
 function! s:UrlEncodePath(p) abort
