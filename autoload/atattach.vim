@@ -144,6 +144,8 @@ function! s:ReplaceAtWithLink(abs_path) abort
 
   let l:line = getline(l:lnum)
   let l:c = s:at_pos.col
+  "The l:c always is at the next space (+1) than the current length of line.
+  let l:inserted_at_end = (l:c == strchars(l:line))
 
   " validate '@' position (allow off-by-one)
   if l:c >= 1 && l:c <= len(l:line) && l:line[l:c - 1] ==# '@'
@@ -159,7 +161,11 @@ function! s:ReplaceAtWithLink(abs_path) abort
   "" move cursor to end of inserted link and return to Insert mode (default)
   let l:cur_stop = l:c + strlen(l:link)
   call cursor(l:lnum, l:cur_stop)
-  call feedkeys("\<Ignore>i", 'n')
+  if l:inserted_at_end
+      call feedkeys("\<Esc>a", 'n')
+  else
+      call feedkeys("\<Esc>i", 'n')
+  endif
 
   let s:at_pos = {}
 endfunction
